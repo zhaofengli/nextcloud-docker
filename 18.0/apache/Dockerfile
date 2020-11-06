@@ -104,7 +104,6 @@ RUN { \
     chown -R www-data:root /var/www; \
     chmod -R g=u /var/www
 
-VOLUME /var/www/html
 
 RUN a2enmod headers rewrite remoteip ;\
     {\
@@ -132,20 +131,20 @@ RUN set -ex; \
     export GNUPGHOME="$(mktemp -d)"; \
 # gpg key from https://nextcloud.com/nextcloud.asc
     gpg --batch --keyserver ha.pool.sks-keyservers.net --recv-keys 28806A878AE423A28372792ED75899B9A724937A; \
-    gpg --batch --verify nextcloud.tar.bz2.asc nextcloud.tar.bz2; \
-    tar -xjf nextcloud.tar.bz2 -C /usr/src/; \
+	mkdir -p /var/www/html; \
+    tar -xjf nextcloud.tar.bz2 -C /var/www/html --strip-components=1; \
     gpgconf --kill all; \
     rm nextcloud.tar.bz2.asc nextcloud.tar.bz2; \
-    rm -rf "$GNUPGHOME" /usr/src/nextcloud/updater; \
-    mkdir -p /usr/src/nextcloud/data; \
-    mkdir -p /usr/src/nextcloud/custom_apps; \
-    chmod +x /usr/src/nextcloud/occ; \
+    rm -rf "$GNUPGHOME" /var/www/html/updater; \
+    mkdir -p /var/www/html/data; \
+    mkdir -p /var/www/html/custom_apps; \
+    chmod +x /var/www/html/occ; \
     \
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false $fetchDeps; \
     rm -rf /var/lib/apt/lists/*
 
 COPY *.sh upgrade.exclude /
-COPY config/* /usr/src/nextcloud/config/
+# COPY config/* /usr/src/nextcloud/config/
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["apache2-foreground"]
